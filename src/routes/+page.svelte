@@ -465,6 +465,7 @@
 	let weatherData = $state<WeatherInfo | null>(null);
 	let loading = $state<boolean>(false);
 	let error = $state<string | null>(null);
+	let geoWarning = $state<string | null>(null);
 	
 	let lat = $state<string>('');
 	let lon = $state<string>('');
@@ -665,8 +666,13 @@
 		// Initialize Map: default London
 		map = L.map('map', { zoomControl: false }).setView([51.5074, -0.1278], 5);
 		
-		// Styled Dark Matter tile layer
-		L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+		// Determine system theme preference for Map tiles
+		const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+		const tileUrl = prefersLight 
+			? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
+			: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+
+		L.tileLayer(tileUrl, {
 			attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
 		}).addTo(map);
 
@@ -775,8 +781,25 @@
 
 	// Geolocation fetcher
 	function requestGeolocation() {
+		// Check for unsecure context over non-localhost local IP (e.g. http://192.168.x.x)
+		if (typeof window !== 'undefined' && !window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+			loading = false;
+			geoWarning = lang === 'tr' 
+				? 'Tarayıcılar yerel ağ üzerindeki HTTP bağlantılarında (192.168.x.x) konum erişimini engeller. Lütfen HTTPS bağlantısı kullanın veya koordinatları manuel girin.' 
+				: 'Safari/Chrome block Geolocation on HTTP connections over the local network. Please use HTTPS or enter coordinates manually.';
+			
+			// Default to London if blocked
+			lat = '51.5074';
+			lon = '-0.1278';
+			currentCity = lang === 'tr' ? 'Londra' : 'London';
+			updateMapLocation(51.5074, -0.1278);
+			fetchWeather(51.5074, -0.1278);
+			return;
+		}
+
 		if (navigator.geolocation) {
 			loading = true;
+			geoWarning = null;
 			error = null;
 			currentCity = translations[lang].locating;
 			navigator.geolocation.getCurrentPosition(
@@ -802,6 +825,29 @@
 				},
 				(geoError) => {
 					console.warn('Geolocation failed or denied', geoError);
+					loading = false;
+					
+					let errMsg = '';
+					if (geoError.code === geoError.PERMISSION_DENIED) {
+						errMsg = lang === 'tr' 
+							? 'Konum erişim izni reddedildi. Lütfen tarayıcı/cihaz ayarlarından izin verin.' 
+							: 'Geolocation permission denied. Please enable location services in your browser/device settings.';
+					} else if (geoError.code === geoError.POSITION_UNAVAILABLE) {
+						errMsg = lang === 'tr'
+							? 'Konum bilgisi alınamadı. Cihazınızın konum servislerinin açık olduğundan emin olun.'
+							: 'Location information unavailable. Ensure your device location services are enabled.';
+					} else if (geoError.code === geoError.TIMEOUT) {
+						errMsg = lang === 'tr'
+							? 'Konum alma isteği zaman aşımına uğradı. Lütfen tekrar deneyin.'
+							: 'Location request timed out. Please try again.';
+					} else {
+						errMsg = lang === 'tr'
+							? 'Konum belirlenirken bir hata oluştu.'
+							: 'An error occurred while retrieving location.';
+					}
+
+					geoWarning = errMsg;
+
 					// Default to London if failed
 					lat = '51.5074';
 					lon = '-0.1278';
@@ -809,7 +855,7 @@
 					updateMapLocation(51.5074, -0.1278);
 					fetchWeather(51.5074, -0.1278);
 				},
-				{ enableHighAccuracy: true, timeout: 10000 }
+				{ enableHighAccuracy: false, timeout: 15000 }
 			);
 		} else {
 			// Fallback if not supported
@@ -1146,26 +1192,11 @@
 			<img src="/logo.svg" alt="Weather logo" class="w-full h-full" />
 		</div>
 		<div>
-			<h1 class="text-3.5xl font-extrabold font-display tracking-tight bg-gradient-to-r from-slate-50 via-slate-100 to-slate-300 bg-clip-text text-transparent">Weather</h1>
+			<h1 class="text-3.5xl font-extrabold font-display tracking-tight bg-gradient-to-r from-[var(--title-gradient-from)] to-[var(--title-gradient-to)] bg-clip-text text-transparent">Weather</h1>
 		</div>
 	</div>
 
 	<div class="flex items-center gap-3">
-		<!-- Language Selection Test Switch Dropdown -->
-		<div class="relative">
-			<select 
-				bind:value={lang}
-				class="bg-white/5 text-text-primary border border-white/10 rounded-full px-3.5 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-sky-500/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] cursor-pointer hover:bg-white/10 transition-all"
-			>
-				<option value="en" class="bg-slate-900 text-text-primary">English (EN)</option>
-				<option value="tr" class="bg-slate-900 text-text-primary">Türkçe (TR)</option>
-				<option value="de" class="bg-slate-900 text-text-primary">Deutsch (DE)</option>
-				<option value="es" class="bg-slate-900 text-text-primary">Español (ES)</option>
-				<option value="fr" class="bg-slate-900 text-text-primary">Français (FR)</option>
-				<option value="it" class="bg-slate-900 text-text-primary">Italiano (IT)</option>
-			</select>
-		</div>
-
 		{#if isOffline}
 			<span class="px-3.5 py-1.5 text-xs font-bold bg-red-950/40 backdrop-blur-md border border-red-500/25 text-red-200 rounded-full flex items-center gap-2">
 				<AlertTriangle class="w-3.5 h-3.5 text-red-400" /> {translations[lang].offlineMode}
@@ -1246,6 +1277,13 @@
 		</button>
 	</form>
 </div>
+
+{#if geoWarning}
+	<div class="p-4 bg-amber-950/20 backdrop-blur-md border border-amber-500/30 text-amber-200 text-sm rounded-2xl mb-8 flex gap-3 items-center">
+		<AlertTriangle class="flex-shrink-0 text-amber-400 w-5 h-5" />
+		<span>{geoWarning}</span>
+	</div>
+{/if}
 
 {#if error}
 	<div class="p-4 bg-red-950/20 backdrop-blur-md border border-red-500/20 text-red-200 text-sm rounded-2xl mb-8 flex gap-3 items-center">
@@ -1534,7 +1572,7 @@
 					</defs>
 
 					<!-- Grid Lines (Horizontal & Vertical) -->
-					<g stroke="rgba(255,255,255,0.03)" stroke-width="1">
+					<g stroke="var(--graph-grid-color)" stroke-width="1">
 						<!-- Horizontal divisions -->
 						<line x1="{svgPoints.paddingLeft}" y1="45" x2="{svgPoints.width - 40}" y2="45" />
 						<line x1="{svgPoints.paddingLeft}" y1="90" x2="{svgPoints.width - 40}" y2="90" />
@@ -1549,7 +1587,7 @@
 						y1="165" 
 						x2={svgPoints.width - 40} 
 						y2="165" 
-						stroke="rgba(255,255,255,0.18)" 
+						stroke="var(--graph-line-color)" 
 						stroke-width="1.5" 
 					/>
 
@@ -1562,7 +1600,7 @@
 								y1="25" 
 								x2={p.x} 
 								y2="280" 
-								stroke="rgba(255,255,255,0.12)" 
+								stroke="var(--graph-border-color)" 
 								stroke-dasharray="4,4" 
 								stroke-width="1.5" 
 							/>
@@ -1570,7 +1608,7 @@
 							<text 
 								x={p.x + 8} 
 								y="15" 
-								fill="#94a3b8" 
+								fill="var(--text-secondary)" 
 								class="text-[10px] font-bold uppercase tracking-wider"
 							>
 								{getWeekdayFull(p.raw.timestamp)}
@@ -1604,7 +1642,7 @@
 					<path d={svgPoints.windPath} fill="none" stroke="url(#windLineGrad)" stroke-width="2" stroke-linecap="round" />
 
 					<!-- Left Y-Axis Labels (Temperature & Wind) -->
-					<g fill="#64748b" font-size="9" font-weight="bold" text-anchor="end">
+					<g fill="var(--text-muted)" font-size="9" font-weight="bold" text-anchor="end">
 						<text x="{svgPoints.paddingLeft - 12}" y="48">{svgPoints.maxTemp}°</text>
 						<text x="{svgPoints.paddingLeft - 12}" y="93">{Math.round((svgPoints.maxTemp + svgPoints.minTemp) / 2)}°</text>
 						<text x="{svgPoints.paddingLeft - 12}" y="138">{svgPoints.minTemp}°</text>
@@ -1625,10 +1663,11 @@
 							<circle cx={p.x} cy={p.yTemp} r="5" fill="#ffffff" stroke="#f97316" stroke-width="2" />
 							
 							<!-- Temperature text labels above the dot -->
+							<!-- Temperature text labels above the dot -->
 							<text 
 								x={p.x} 
 								y={p.yTemp - 14} 
-								fill="#f8fafc" 
+								fill="var(--text-primary)" 
 								font-size="11" 
 								font-weight="black" 
 								text-anchor="middle"
@@ -1650,7 +1689,7 @@
 						<text 
 							x={p.x} 
 							y="272" 
-							fill="#cbd5e1" 
+							fill="var(--text-secondary)" 
 							font-size="11" 
 							font-weight="bold"
 							text-anchor="middle"
@@ -1662,7 +1701,7 @@
 						<text 
 							x={p.x} 
 							y="290" 
-							fill="#64748b" 
+							fill="var(--text-muted)" 
 							font-size="9" 
 							font-weight="bold"
 							text-anchor="middle"
@@ -1678,7 +1717,7 @@
 							y1="25" 
 							x2={hoveredPoint.x} 
 							y2="280" 
-							stroke="rgba(255,255,255,0.25)" 
+							stroke="var(--graph-line-color)" 
 							stroke-dasharray="3,3" 
 							stroke-width="1.5" 
 							pointer-events="none"
