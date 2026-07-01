@@ -1,42 +1,58 @@
-# sv
+# Weather Web App (PWA)
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A premium, glassmorphic **Weather Web Application** built with **SvelteKit**, **Svelte 5 (Runes)**, and **Tailwind CSS**. It is fully responsive, optimized for mobile devices, and configured as a Progressive Web App (PWA) for seamless offline access.
 
-## Creating a project
+---
 
-If you're seeing this, you've probably already done this step. Congrats!
+## 🌟 Key Features
 
-```sh
-# create a new project
-npx sv create my-app
+* **Real-time Weather Data**: Consumes the official `met.no` location forecast API with custom caching.
+* **Interactive Leaflet Map**: Centered at your location (or default London) where cities can be clicked to query weather coordinates automatically.
+* **Interactive Svelte Charts**: Detailed hour-by-hour visualisations of temperature, precipitation, and wind speeds.
+* **Grammar-Aware Multi-Language Support**: Complete translations for English, Türkçe, Deutsch, Español, Français, and Italiano, including dynamic word ordering for wind directions.
+* **Persistent SQLite Cache**: Mitigates API rate limits via a server-side caching database with dynamic TTL controls.
+* **PWA & Offline Capability**: Installs directly on mobile or desktop devices and caches templates and forecasts for offline viewing.
+* **Dockerized Deployment**: Clean multi-stage build running on lightweight Alpine Linux with externalized port and volume mappings.
+
+---
+
+## 🚀 Running Locally (Development)
+
+To spin up the project on your local machine:
+
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+2. **Start the development server**:
+   ```bash
+   npm run dev -- --open
+   ```
+
+3. **Build the production build**:
+   ```bash
+   npm run build
+   ```
+
+---
+
+## 🐳 Docker Deployment
+
+The application includes native Docker and Docker Compose configurations utilizing a `node:lts-alpine` image base.
+
+### 1. Configuration (`.env` File)
+Create a `.env` file (copied from `.env.example`) to configure the host port:
+```env
+# The external port the application will be exposed on
+APP_PORT=3000
 ```
 
-To recreate this project with the same configuration:
-
-```sh
-# recreate this project
-npx sv@0.16.1 create --template minimal --types ts --add tailwindcss="plugins:none" --install npm ./
+### 2. Launching with Docker Compose
+To build and start the containerized application:
+```bash
+docker compose up -d --build
 ```
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+### 3. Volume Persistence
+The `compose.yaml` file defines a named volume `weather-data` that maps to `/app/data` inside the container. This ensures that the cached SQLite database (`weather_cache.db`) is preserved across container restarts and updates.
