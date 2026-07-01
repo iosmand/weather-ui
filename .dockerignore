@@ -1,0 +1,8 @@
+node_modules
+.svelte-kit
+build
+.git
+.gitignore
+weather_cache.db
+*.log
+docker-compose.override.yml

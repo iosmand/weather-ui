@@ -1,0 +1,19 @@
+services:
+  weather:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: weather-app
+    ports:
+      - "3000:3000"
+    volumes:
+      - weather-data:/app/data
+    environment:
+      - PORT=3000
+      - HOST=0.0.0.0
+      - DATABASE_PATH=/app/data/weather_cache.db
+    restart: unless-stopped
+
+volumes:
+  weather-data:
+    driver: local
