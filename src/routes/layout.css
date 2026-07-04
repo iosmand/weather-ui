@@ -199,3 +199,17 @@ body {
 .leaflet-container {
   font-family: inherit;
 }
+
+/* Fallback glassmorphic blur classes to bypass Tailwind PostCSS prefixing bugs */
+.glass-blur-sm {
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+}
+.glass-blur-md {
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+.glass-blur-xl {
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+}

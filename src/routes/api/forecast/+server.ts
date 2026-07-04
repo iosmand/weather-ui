@@ -13,57 +13,65 @@ export const GET: RequestHandler = async ({ url }) => {
 
 	const formattedLat = parseFloat(lat).toFixed(4);
 	const formattedLon = parseFloat(lon).toFixed(4);
-	
+
 	// Check SQLite cache
 	const cacheKey = `forecast_${formattedLat}_${formattedLon}_${altitude || '0'}`;
 	const cachedData = getCache(cacheKey);
-	
+
 	if (cachedData) {
 		return json(cachedData);
 	}
 
-	const metUrl = new URL('https://api.met.no/weatherapi/locationforecast/2.0/compact');
-	metUrl.searchParams.set('lat', formattedLat);
-	metUrl.searchParams.set('lon', formattedLon);
-	if (altitude) {
-		metUrl.searchParams.set('altitude', parseInt(altitude).toString());
-	}
-
 	try {
-		const response = await fetch(metUrl.toString(), {
-			headers: {
-				'User-Agent': 'WeatherAppUI/1.0 (https://github.com/i0s/weather-ui; contact: weatherapi-adm@met.no)'
-			}
-		});
+		const openMeteoUrl = new URL('https://api.open-meteo.com/v1/forecast');
+		openMeteoUrl.searchParams.set('latitude', formattedLat);
+		openMeteoUrl.searchParams.set('longitude', formattedLon);
+		openMeteoUrl.searchParams.set('current', [
+			'temperature_2m',
+			'relative_humidity_2m',
+			'apparent_temperature',
+			'wind_speed_10m',
+			'wind_direction_10m',
+			'pressure_msl',
+			'weather_code',
+			'precipitation',
+			'is_day'
+		].join(','));
+		openMeteoUrl.searchParams.set('hourly', [
+			'temperature_2m',
+			'relative_humidity_2m',
+			'apparent_temperature',
+			'wind_speed_10m',
+			'wind_direction_10m',
+			'weather_code',
+			'precipitation',
+			'visibility',
+			'uv_index',
+			'snow_depth',
+			'freezing_level_height',
+			'is_day'
+		].join(','));
+		openMeteoUrl.searchParams.set('wind_speed_unit', 'ms');
+		openMeteoUrl.searchParams.set('timezone', 'auto');
+
+		const response = await fetch(openMeteoUrl.toString());
 
 		if (!response.ok) {
 			const errorText = await response.text();
 			return json(
-				{ error: `met.no API returned status ${response.status}: ${errorText}` },
+				{ error: `Open-Meteo API returned status ${response.status}: ${errorText}` },
 				{ status: response.status }
 			);
 		}
 
 		const data = await response.json();
+		data.fetchedAt = Date.now();
 
-		// Calculate TTL from met.no Expires header
-		const expiresHeader = response.headers.get('expires');
-		let ttlSeconds = 1800; // 30 minutes default
-		
-		if (expiresHeader) {
-			const expiresTime = new Date(expiresHeader).getTime();
-			const now = Date.now();
-			if (expiresTime > now) {
-				// Keep cache until expiration time (but at least 10 minutes, max 6 hours)
-				ttlSeconds = Math.max(600, Math.min(21600, Math.round((expiresTime - now) / 1000)));
-			}
-		}
-
-		// Save in SQLite cache
-		setCache(cacheKey, data, ttlSeconds);
+		// Cache in SQLite for 30 minutes (1800s)
+		setCache(cacheKey, data, 1800);
 
 		return json(data);
 	} catch (error: any) {
-		return json({ error: error.message || 'Failed to fetch weather data' }, { status: 500 });
+		return json({ error: error.message || 'Failed to fetch Open-Meteo weather data' }, { status: 500 });
 	}
 };

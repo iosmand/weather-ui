@@ -7,12 +7,13 @@
 	}>();
 
 	// Map sizes to Tailwind dimension classes
-	let sizeClasses = $derived({
+	const sizeMap: Record<'sm' | 'md' | 'lg' | 'xl', string> = {
 		sm: 'w-6 h-6',
 		md: 'w-10 h-10',
 		lg: 'w-16 h-16',
 		xl: 'w-24 h-24'
-	}[size]);
+	};
+	let sizeClasses = $derived(sizeMap[size as 'sm' | 'md' | 'lg' | 'xl']);
 
 	let filename = $derived(getMeteoconFilename(symbolCode));
 </script>

@@ -5,14 +5,17 @@ WORKDIR /app
 # Install compilation tools required for native C++ bindings (better-sqlite3) on Alpine
 RUN apk add --no-cache python3 make g++
 
-COPY package.json package-lock.json ./
-RUN npm ci
+# Install pnpm
+RUN npm install -g pnpm
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
 
 COPY . .
-RUN npm run build
+RUN pnpm run build
 
 # Remove development packages to keep production image light
-RUN npm prune --production
+RUN pnpm prune --prod
 
 # Stage 2: Production runner
 FROM node:lts-alpine AS runner

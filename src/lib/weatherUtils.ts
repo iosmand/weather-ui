@@ -161,6 +161,11 @@ export function getMeteoconFilename(symbolCode: string): string {
 		case 'clearsky_night':
 			return 'clear-night.svg';
 		
+		case 'mostlyclear_day':
+			return 'mostly-clear-day.svg';
+		case 'mostlyclear_night':
+			return 'mostly-clear-night.svg';
+
 		case 'fair_day':
 		case 'fair_polartwilight':
 		case 'partlycloudy_day':
@@ -174,6 +179,17 @@ export function getMeteoconFilename(symbolCode: string): string {
 		case 'cloudy':
 			return 'cloudy.svg';
 		
+		case 'overcast_day':
+			return 'overcast-day.svg';
+		case 'overcast_night':
+			return 'overcast-night.svg';
+		case 'overcast':
+			return 'overcast.svg';
+		
+		case 'fog_day':
+			return 'fog-day.svg';
+		case 'fog_night':
+			return 'fog-night.svg';
 		case 'fog':
 			return 'fog.svg';
 		
@@ -184,6 +200,15 @@ export function getMeteoconFilename(symbolCode: string): string {
 			return 'rain.svg';
 		case 'heavyrain':
 			return 'extreme-rain.svg';
+		case 'overcastrain_day':
+			return 'overcast-day-rain.svg';
+		case 'overcastrain_night':
+			return 'overcast-night-rain.svg';
+		
+		case 'overcastdrizzle_day':
+			return 'overcast-day-drizzle.svg';
+		case 'overcastdrizzle_night':
+			return 'overcast-night-drizzle.svg';
 		
 		// Rain Showers
 		case 'lightrainshowers_day':
@@ -202,10 +227,20 @@ export function getMeteoconFilename(symbolCode: string): string {
 		case 'heavyrainshowers_night':
 			return 'extreme-night-rain.svg';
 		
+		// Hail Showers
+		case 'hailshowers_day':
+			return 'partly-cloudy-day-hail.svg';
+		case 'hailshowers_night':
+			return 'partly-cloudy-night-hail.svg';
+		
 		// Sleet
 		case 'lightsleet':
 		case 'sleet':
 			return 'sleet.svg';
+		case 'heavysleet_day':
+			return 'extreme-day-sleet.svg';
+		case 'heavysleet_night':
+			return 'extreme-night-sleet.svg';
 		case 'heavysleet':
 			return 'extreme-sleet.svg';
 		
@@ -228,6 +263,10 @@ export function getMeteoconFilename(symbolCode: string): string {
 		case 'lightsnow':
 		case 'snow':
 			return 'snow.svg';
+		case 'heavysnow_day':
+			return 'extreme-day-snow.svg';
+		case 'heavysnow_night':
+			return 'extreme-night-snow.svg';
 		case 'heavysnow':
 			return 'extreme-snow.svg';
 		
@@ -265,6 +304,15 @@ export function getMeteoconFilename(symbolCode: string): string {
 			return 'thunderstorms-sleet.svg';
 		case 'heavysleetandthunder':
 			return 'extreme-thunderstorms-sleet.svg';
+		
+		case 'thunderstormshail_day':
+			return 'thunderstorms-day-hail.svg';
+		case 'thunderstormshail_night':
+			return 'thunderstorms-night-hail.svg';
+		case 'extremethunderstormshail_day':
+			return 'extreme-thunderstorms-day-hail.svg';
+		case 'extremethunderstormshail_night':
+			return 'extreme-thunderstorms-extreme-night-hail.svg';
 		
 		// Thunderstorm Showers
 		case 'lightrainshowersandthunder_day':
