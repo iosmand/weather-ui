@@ -5,7 +5,7 @@ import { OPENWEATHER_API_KEY } from '$env/static/private';
 
 export const GET: RequestHandler = async ({ params }) => {
 	const { layer, z, x, y } = params;
-	const apiKey = env.OPENWEATHER_API_KEY || OPENWEATHER_API_KEY || 'REMOVED_SECRET';
+	const apiKey = env.OPENWEATHER_API_KEY || OPENWEATHER_API_KEY;
 
 	if (!apiKey) {
 		throw error(500, 'OpenWeatherMap API key is not configured');
