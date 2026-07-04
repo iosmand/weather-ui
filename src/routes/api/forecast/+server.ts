@@ -1,6 +1,9 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getCache, setCache } from '$lib/server/db';
+import { createLogger } from '$lib/server/logger';
+
+const log = createLogger('api:forecast');
 
 export const GET: RequestHandler = async ({ url }) => {
 	const lat = url.searchParams.get('lat');
@@ -58,6 +61,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		if (!response.ok) {
 			const errorText = await response.text();
+			log.warn('Open-Meteo forecast request failed', { status: response.status, body: errorText });
 			return json(
 				{ error: `Open-Meteo API returned status ${response.status}: ${errorText}` },
 				{ status: response.status }
@@ -72,6 +76,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		return json(data);
 	} catch (error: any) {
+		log.error('Failed to fetch Open-Meteo forecast', error, { lat: formattedLat, lon: formattedLon });
 		return json({ error: error.message || 'Failed to fetch Open-Meteo weather data' }, { status: 500 });
 	}
 };

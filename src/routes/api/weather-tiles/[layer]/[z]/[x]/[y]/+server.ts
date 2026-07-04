@@ -1,6 +1,9 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { env } from '$env/dynamic/private';
+import { createLogger } from '$lib/server/logger';
+
+const log = createLogger('api:weather-tiles');
 
 export const GET: RequestHandler = async ({ params }) => {
 	const { layer, z, x, y } = params;
@@ -21,6 +24,7 @@ export const GET: RequestHandler = async ({ params }) => {
 	try {
 		const res = await fetch(targetUrl);
 		if (!res.ok) {
+			log.warn('OpenWeatherMap tile request failed', { layer, z, x, y: cleanY, status: res.status });
 			return new Response(`OpenWeatherMap returned status ${res.status}`, { status: res.status });
 		}
 
@@ -32,6 +36,7 @@ export const GET: RequestHandler = async ({ params }) => {
 			}
 		});
 	} catch (err: any) {
+		log.error('Failed to fetch weather tile', err, { layer, z, x, y: cleanY });
 		return new Response(err.message || 'Failed to fetch weather tile', { status: 500 });
 	}
 };

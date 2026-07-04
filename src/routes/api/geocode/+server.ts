@@ -1,6 +1,9 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getCache, setCache } from '$lib/server/db';
+import { createLogger } from '$lib/server/logger';
+
+const log = createLogger('api:geocode');
 
 export const GET: RequestHandler = async ({ url }) => {
 	const lat = url.searchParams.get('lat');
@@ -52,7 +55,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		return json(result);
 	} catch (error) {
-		console.error('Geocoding error:', error);
+		log.error('Geocoding lookup failed', error, { lat: formattedLat, lon: formattedLon });
 		return json({ name: 'Detected Location' });
 	}
 };

@@ -12,6 +12,7 @@ services:
       - PORT=3000
       - HOST=0.0.0.0
       - DATABASE_PATH=/app/data/weather_cache.db
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
     restart: unless-stopped
 
 volumes:
