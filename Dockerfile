@@ -36,5 +36,6 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOST=0.0.0.0
 ENV DATABASE_PATH=/app/data/weather_cache.db
+ENV NODE_ENV=production
 
 CMD ["node", "build"]
