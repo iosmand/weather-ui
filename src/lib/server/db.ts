@@ -34,7 +34,7 @@ export function getCache(key: string): any | null {
 
 		return JSON.parse(row.data);
 	} catch (error) {
-		log.error(`Error reading cache for key ${key}`, error);
+		log.error({ err: error, key }, 'Error reading cache');
 		return null;
 	}
 }
@@ -59,7 +59,7 @@ export function setCache(key: string, data: any, ttlSeconds: number): void {
 		// Periodically prune expired entries
 		pruneCache();
 	} catch (error) {
-		log.error(`Error writing cache for key ${key}`, error);
+		log.error({ err: error, key }, 'Error writing cache');
 	}
 }
 
@@ -71,7 +71,7 @@ export function deleteCache(key: string): void {
 		const stmt = db.prepare('DELETE FROM weather_cache WHERE key = ?');
 		stmt.run(key);
 	} catch (error) {
-		log.error(`Error deleting cache for key ${key}`, error);
+		log.error({ err: error, key }, 'Error deleting cache');
 	}
 }
 
@@ -82,8 +82,11 @@ function pruneCache(): void {
 	try {
 		const now = Date.now();
 		const stmt = db.prepare('DELETE FROM weather_cache WHERE expires_at < ?');
-		stmt.run(now);
+		const { changes } = stmt.run(now);
+		if (changes > 0) {
+			log.info({ removedEntries: changes }, 'Pruned expired cache entries');
+		}
 	} catch (error) {
-		log.error('Error pruning cache', error);
+		log.error({ err: error }, 'Error pruning cache');
 	}
 }

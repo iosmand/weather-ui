@@ -24,7 +24,7 @@ export const GET: RequestHandler = async ({ params }) => {
 	try {
 		const res = await fetch(targetUrl);
 		if (!res.ok) {
-			log.warn('OpenWeatherMap tile request failed', { layer, z, x, y: cleanY, status: res.status });
+			log.warn({ layer, z, x, y: cleanY, status: res.status }, 'OpenWeatherMap tile request failed');
 			return new Response(`OpenWeatherMap returned status ${res.status}`, { status: res.status });
 		}
 
@@ -36,7 +36,7 @@ export const GET: RequestHandler = async ({ params }) => {
 			}
 		});
 	} catch (err: any) {
-		log.error('Failed to fetch weather tile', err, { layer, z, x, y: cleanY });
+		log.error({ err, layer, z, x, y: cleanY }, 'Failed to fetch weather tile');
 		return new Response(err.message || 'Failed to fetch weather tile', { status: 500 });
 	}
 };

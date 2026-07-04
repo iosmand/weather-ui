@@ -55,7 +55,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		return json(result);
 	} catch (error) {
-		log.error('Geocoding lookup failed', error, { lat: formattedLat, lon: formattedLon });
+		log.error({ err: error, lat: formattedLat, lon: formattedLon }, 'Geocoding lookup failed');
 		return json({ name: 'Detected Location' });
 	}
 };

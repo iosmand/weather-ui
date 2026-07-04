@@ -13,6 +13,11 @@ services:
       - HOST=0.0.0.0
       - DATABASE_PATH=/app/data/weather_cache.db
       - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
 
 volumes:

@@ -6,7 +6,7 @@
 
 <svelte:head>
 	<link rel="icon" type="image/svg+xml" href="/logo.svg" />
-	<title>Aura Weather</title>
+	<title>Hava Durumu</title>
 </svelte:head>
 
 <div class="min-h-screen flex flex-col antialiased">

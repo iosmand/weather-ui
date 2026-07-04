@@ -1,4 +1,4 @@
-# Weather Web App (PWA)
+# Hava Durumu (PWA)
 
 A premium, glassmorphic **Weather Web Application** built with **SvelteKit**, **Svelte 5 (Runes)**, and **Tailwind CSS**. It is fully responsive, optimized for mobile devices, and configured as a Progressive Web App (PWA) for seamless offline access.
 

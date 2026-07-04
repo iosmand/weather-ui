@@ -1,6 +1,6 @@
 {
-  "name": "Antigravity Weather PWA",
-  "short_name": "Weather",
+  "name": "Hava Durumu",
+  "short_name": "Hava Durumu",
   "description": "A beautiful, premium, offline-first SvelteKit Weather Progressive Web Application.",
   "start_url": "/",
   "display": "standalone",

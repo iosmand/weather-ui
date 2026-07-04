@@ -46,7 +46,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		if (!response.ok) {
 			const errorText = await response.text();
-			log.warn('Open-Meteo sunrise request failed', { status: response.status, body: errorText });
+			log.warn({ status: response.status, body: errorText }, 'Open-Meteo sunrise request failed');
 			return json(
 				{ error: `Open-Meteo Sunrise API returned status ${response.status}: ${errorText}` },
 				{ status: response.status }
@@ -84,7 +84,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		return json(mappedData);
 	} catch (error: any) {
-		log.error('Failed to fetch sunrise data', error, { lat: formattedLat, lon: formattedLon, date: dateStr });
+		log.error({ err: error, lat: formattedLat, lon: formattedLon, date: dateStr }, 'Failed to fetch sunrise data');
 		return json({ error: error.message || 'Failed to fetch sunrise data' }, { status: 500 });
 	}
 };
