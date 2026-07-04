@@ -30,35 +30,55 @@ export const GET: RequestHandler = async ({ url }) => {
 		return json(cachedData);
 	}
 
-	const metUrl = new URL('https://api.met.no/weatherapi/sunrise/3.0/sun');
-	metUrl.searchParams.set('lat', formattedLat);
-	metUrl.searchParams.set('lon', formattedLon);
-	metUrl.searchParams.set('date', dateStr);
-	if (offset) {
-		metUrl.searchParams.set('offset', offset);
-	}
+	const openMeteoUrl = new URL('https://api.open-meteo.com/v1/forecast');
+	openMeteoUrl.searchParams.set('latitude', formattedLat);
+	openMeteoUrl.searchParams.set('longitude', formattedLon);
+	openMeteoUrl.searchParams.set('daily', 'sunrise,sunset');
+	openMeteoUrl.searchParams.set('timezone', 'auto');
+	openMeteoUrl.searchParams.set('start_date', dateStr);
+	openMeteoUrl.searchParams.set('end_date', dateStr);
 
 	try {
-		const response = await fetch(metUrl.toString(), {
-			headers: {
-				'User-Agent': 'WeatherAppUI/1.0 (https://github.com/i0s/weather-ui; contact: weatherapi-adm@met.no)'
-			}
-		});
+		const response = await fetch(openMeteoUrl.toString());
 
 		if (!response.ok) {
 			const errorText = await response.text();
 			return json(
-				{ error: `met.no Sunrise API returned status ${response.status}: ${errorText}` },
+				{ error: `Open-Meteo Sunrise API returned status ${response.status}: ${errorText}` },
 				{ status: response.status }
 			);
 		}
 
 		const data = await response.json();
 
-		// Sunrise/sunset for a specific date is fixed, cache for 24 hours (86400 seconds)
-		setCache(cacheKey, data, 86400);
+		const utcOffsetSeconds = data.utc_offset_seconds || 0;
+		const offsetSign = utcOffsetSeconds >= 0 ? '+' : '-';
+		const absOffsetSeconds = Math.abs(utcOffsetSeconds);
+		const offsetHours = Math.floor(absOffsetSeconds / 3600);
+		const offsetMinutes = Math.floor((absOffsetSeconds % 3600) / 60);
+		const offsetStr = `${offsetSign}${String(offsetHours).padStart(2, '0')}:${String(offsetMinutes).padStart(2, '0')}`;
 
-		return json(data);
+		const rawSunrise = data.daily?.sunrise?.[0];
+		const rawSunset = data.daily?.sunset?.[0];
+
+		const sunriseTime = rawSunrise ? `${rawSunrise}${offsetStr}` : null;
+		const sunsetTime = rawSunset ? `${rawSunset}${offsetStr}` : null;
+
+		const mappedData = {
+			properties: {
+				sunrise: {
+					time: sunriseTime
+				},
+				sunset: {
+					time: sunsetTime
+				}
+			}
+		};
+
+		// Sunrise/sunset for a specific date is fixed, cache for 24 hours (86400 seconds)
+		setCache(cacheKey, mappedData, 86400);
+
+		return json(mappedData);
 	} catch (error: any) {
 		return json({ error: error.message || 'Failed to fetch sunrise data' }, { status: 500 });
 	}
